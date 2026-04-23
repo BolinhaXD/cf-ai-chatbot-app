@@ -60,14 +60,17 @@ async function handleChatRequest(
 ): Promise<Response> {
 	try {
 		// Parse JSON request body
-		const { messages = [] } = (await request.json()) as {
+		const { messages = [], sessionId } = (await request.json()) as {
 			messages: ChatMessage[];
+			sessionId: string
 		};
 
 		// Add system prompt if not present
 		if (!messages.some((msg) => msg.role === "system")) {
 			messages.unshift({ role: "system", content: SYSTEM_PROMPT });
 		}
+
+		console.log(sessionId)
 
 		const stream = await env.AI.run(
 			MODEL_ID,

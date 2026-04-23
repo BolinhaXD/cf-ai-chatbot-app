@@ -20,6 +20,15 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
+let sessionId = localStorage.getItem("sessionId");
+
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  localStorage.setItem("sessionId", sessionId);
+}
+
+console.log(sessionId)
+
 // Auto-resize textarea as user types
 userInput.addEventListener("input", function () {
 	this.style.height = "auto";
@@ -83,6 +92,7 @@ async function sendMessage() {
 			},
 			body: JSON.stringify({
 				messages: chatHistory,
+				sessionId: sessionId
 			}),
 		});
 
