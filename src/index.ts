@@ -11,6 +11,8 @@ import { Env, ChatMessage } from "./types";
 
 // Model ID for Workers AI model
 // https://developers.cloudflare.com/workers-ai/models/
+const MODEL_ID_SECOND = "@cf/meta/llama-3.1-8b-instruct-fp8";
+
 const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 // Default system prompt
@@ -44,13 +46,6 @@ export default {
 			return new Response("Method not allowed", { status: 405 });
 		}
 
-		if (url.pathname === "/api/history") {
-			const { sessionId } = await request.json();
-			const history =
-				(await env.CHAT_KV.get(sessionId, { type: "json" })) || [];
-			return Response.json({ history });
-		}
-
 		// Handle 404 for unmatched routes
 		return new Response("Not found", { status: 404 });
 	},
@@ -65,28 +60,9 @@ async function handleChatRequest(
 ): Promise<Response> {
 	try {
 		// Parse JSON request body
-		const { messages = [], sessionId } = (await request.json()) as {
+		const { messages = [] } = (await request.json()) as {
 			messages: ChatMessage[];
-			sessionId: string
 		};
-
-		if (!sessionId) {
-			return new Response("Missing sessionId", { status: 400 });
-		}
-		console.log(sessionId)
-
-		let history =
-			(await env.CHAT_KV.get(sessionId, { type: "json" })) || [];
-
-		if (history.length === 0) {
-			history = messages;
-		} else {
-			// append ONLY the last user message
-			const lastMsg = messages[messages.length - 1];
-			if (lastMsg?.role === "user") {
-				history.push(lastMsg);
-			}
-		}
 
 		// Add system prompt if not present
 		if (!messages.some((msg) => msg.role === "system")) {
@@ -96,7 +72,7 @@ async function handleChatRequest(
 		const stream = await env.AI.run(
 			MODEL_ID,
 			{
-				messages: history,
+				messages,
 				max_tokens: 1024,
 				stream: true,
 			},
@@ -109,39 +85,6 @@ async function handleChatRequest(
 				// },
 			},
 		);
-
-		let fullResponse = "";
-
-		const transformedStream = new ReadableStream({
-			async start(controller) {
-				const reader = stream.getReader();
-				const decoder = new TextDecoder();
-				const encoder = new TextEncoder();
-
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					const chunk = decoder.decode(value);
-					fullResponse += chunk;
-
-					controller.enqueue(encoder.encode(chunk));
-				}
-
-				history.push({
-					role: "assistant",
-					content: fullResponse,
-				});
-
-				await env.CHAT_KV.put(
-					sessionId,
-					JSON.stringify(history),
-					{ expirationTtl: 86400 }
-				);
-
-				controller.close();
-			},
-		});
 
 		return new Response(stream, {
 			headers: {
