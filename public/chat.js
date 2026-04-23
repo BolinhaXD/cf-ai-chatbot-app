@@ -10,6 +10,15 @@ const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
 
+let sessionId = localStorage.getItem("sessionId");
+
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  localStorage.setItem("sessionId", sessionId);
+}
+
+printChatHistory()
+
 // Chat state
 let chatHistory = [
 	{
@@ -83,6 +92,7 @@ async function sendMessage() {
 			},
 			body: JSON.stringify({
 				messages: chatHistory,
+				sessionId: sessionId
 			}),
 		});
 
@@ -206,6 +216,26 @@ function addMessageToChat(role, content) {
 
 	// Scroll to bottom
 	chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function printChatHistory(){
+	const res = await fetch("/api/history", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ sessionId }),
+	});
+
+	const data = await res.json();
+
+	if (data.history) {
+		chatHistory = data.history;
+
+		// render it
+		chatMessages.innerHTML = "";
+		for (const msg of chatHistory) {
+			addMessageToChat(msg.role, msg.content);
+		}
+	}
 }
 
 function consumeSseEvents(buffer) {
