@@ -23,8 +23,8 @@ let isProcessing = false;
 let sessionId = localStorage.getItem("sessionId");
 
 if (!sessionId) {
-  sessionId = crypto.randomUUID();
-  localStorage.setItem("sessionId", sessionId);
+	sessionId = crypto.randomUUID();
+	localStorage.setItem("sessionId", sessionId);
 }
 
 console.log("IN FRONT-END: ", sessionId)
@@ -186,6 +186,17 @@ async function sendMessage() {
 		// Add completed response to chat history
 		if (responseText.length > 0) {
 			chatHistory.push({ role: "assistant", content: responseText });
+			await fetch("/api/save", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					sessionId: sessionId,
+					userMessage: message,
+					assistantMessage: responseText,
+				}),
+			});
 		}
 	} catch (error) {
 		console.error("Error:", error);

@@ -46,6 +46,15 @@ export default {
 			return new Response("Method not allowed", { status: 405 });
 		}
 
+		if (url.pathname === "/api/save") {
+			if (request.method === "POST") {
+				return handleSaveRequest(request, env);
+			}
+
+			// Method not allowed for other request types
+			return new Response("Method not allowed", { status: 405 });
+		}
+
 		// Handle 404 for unmatched routes
 		return new Response("Not found", { status: 404 });
 	},
@@ -106,4 +115,26 @@ async function handleChatRequest(
 			},
 		);
 	}
+}
+
+/**
+ * Handles chat API save requests
+ */
+async function handleSaveRequest(request: Request, env: Env) {
+	const { sessionId, userMessage, assistantMessage } =
+		await request.json();
+
+	let history =
+		(await env.CHAT_KV.get(sessionId, { type: "json" })) || [];
+
+	history.push(
+		{ role: "user", content: userMessage },
+		{ role: "assistant", content: assistantMessage }
+	);
+
+	await env.CHAT_KV.put(sessionId, JSON.stringify(history), {
+		expirationTtl: 86400,
+	});
+
+	return new Response("ok");
 }

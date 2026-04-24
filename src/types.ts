@@ -12,6 +12,8 @@ export interface Env {
 	 * Binding for static assets.
 	 */
 	ASSETS: { fetch: (request: Request) => Promise<Response> };
+
+	CHAT_KV: KVNamespace;
 }
 
 /**
