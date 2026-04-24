@@ -250,3 +250,31 @@ function consumeSseEvents(buffer) {
 	}
 	return { events, buffer: normalized };
 }
+
+function loadHistory(){{
+	const res = await fetch("/api/history", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			sessionId: sessionId,
+		}),
+	});
+
+	const data = await res.json();
+
+	if (data.history && data.history.length > 0) {
+		chatHistory = data.history;
+
+		chatMessages.innerHTML = "";
+
+		for (const msg of chatHistory) {
+			addMessageToChat(msg.role, msg.content);
+		}
+	}
+}}
+
+window.addEventListener("load", () => {
+	loadHistory();
+});

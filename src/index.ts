@@ -55,6 +55,15 @@ export default {
 			return new Response("Method not allowed", { status: 405 });
 		}
 
+		if (url.pathname === "/api/history") {
+			if (request.method === "POST") {
+				return handleHistoryRequest(request, env);
+			}
+
+			// Method not allowed for other request types
+			return new Response("Method not allowed", { status: 405 });
+		}
+
 		// Handle 404 for unmatched routes
 		return new Response("Not found", { status: 404 });
 	},
@@ -118,7 +127,7 @@ async function handleChatRequest(
 }
 
 /**
- * Handles chat API save requests
+ * Handles chat API save history requests
  */
 async function handleSaveRequest(
 	request: Request, env: Env
@@ -130,7 +139,7 @@ async function handleSaveRequest(
 			userMessage: string;
 			assistantMessage: string
 		};
-		
+
 		console.log(env.CHAT_KV)
 
 		let historyRaw = await env.CHAT_KV.get(sessionId)
@@ -148,6 +157,31 @@ async function handleSaveRequest(
 		});
 
 		return new Response("ok");
+	} catch (error) {
+		console.error("Error processing chat request:", error);
+		return new Response(
+			JSON.stringify({ error: "Failed to process request" }),
+			{
+				status: 500,
+				headers: { "content-type": "application/json" },
+			},
+		);
+	}
+}
+
+async function handleHistoryRequest(
+	request: Request, env: Env
+): Promise<Response> {
+	try {
+		const { sessionId } = (await request.json()) as {
+			sessionId: string;
+		};
+
+		let historyRaw = await env.CHAT_KV.get(sessionId)
+		let history = historyRaw ? JSON.parse(historyRaw) : [];
+
+		return Response.json({ history });
+
 	} catch (error) {
 		console.error("Error processing chat request:", error);
 		return new Response(
