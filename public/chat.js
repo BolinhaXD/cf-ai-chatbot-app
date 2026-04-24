@@ -27,7 +27,7 @@ if (!sessionId) {
   localStorage.setItem("sessionId", sessionId);
 }
 
-console.log(sessionId)
+console.log("IN FRONT-END: ", sessionId)
 
 // Auto-resize textarea as user types
 userInput.addEventListener("input", function () {

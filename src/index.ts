@@ -70,7 +70,7 @@ async function handleChatRequest(
 			messages.unshift({ role: "system", content: SYSTEM_PROMPT });
 		}
 
-		console.log(sessionId)
+		console.log("IN BACK-END: ", sessionId)
 
 		const stream = await env.AI.run(
 			MODEL_ID,
