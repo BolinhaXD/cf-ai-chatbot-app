@@ -120,21 +120,39 @@ async function handleChatRequest(
 /**
  * Handles chat API save requests
  */
-async function handleSaveRequest(request: Request, env: Env) {
-	const { sessionId, userMessage, assistantMessage } =
-		await request.json();
+async function handleSaveRequest(
+	request: Request, env: Env
+): Promise<Response> {
+	try {
+		// Parse JSON request body
+		const { sessionId, userMessage, assistantMessage } = (await request.json()) as {
+			sessionId: string;
+			userMessage: string;
+			assistantMessage: string
+		};
 
-	let history =
-		(await env.CHAT_KV.get(sessionId, { type: "json" })) || [];
+		let history = (await env.CHAT_KV.get(sessionId, { type: "json" })) || [];
 
-	history.push(
-		{ role: "user", content: userMessage },
-		{ role: "assistant", content: assistantMessage }
-	);
+		history.push(
+			{ role: "user", content: userMessage },
+			{ role: "assistant", content: assistantMessage }
+		);
 
-	await env.CHAT_KV.put(sessionId, JSON.stringify(history), {
-		expirationTtl: 86400,
-	});
+		console.log(history)
 
-	return new Response("ok");
+		await env.CHAT_KV.put(sessionId, JSON.stringify(history), {
+			expirationTtl: 86400,
+		});
+
+		return new Response("ok");
+	} catch (error) {
+		console.error("Error processing chat request:", error);
+		return new Response(
+			JSON.stringify({ error: "Failed to process request" }),
+			{
+				status: 500,
+				headers: { "content-type": "application/json" },
+			},
+		);
+	}
 }

@@ -72,7 +72,8 @@ async function sendMessage() {
 
 	// Add message to history
 	chatHistory.push({ role: "user", content: message });
-
+	console.log(chatHistory)
+	
 	try {
 		// Create new assistant response element
 		const assistantMessageEl = document.createElement("div");
