@@ -72,7 +72,7 @@ async function sendMessage() {
 
 	// Add message to history
 	chatHistory.push({ role: "user", content: message });
-	console.log("IN FRONT-END: ", chatHistory)
+	console.log("IN FRONT-END CHATHISTORY: ", chatHistory)
 
 	try {
 		// Create new assistant response element

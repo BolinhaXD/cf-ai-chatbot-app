@@ -130,20 +130,18 @@ async function handleSaveRequest(
 			userMessage: string;
 			assistantMessage: string
 		};
+		
+		console.log(env.CHAT_KV)
 
-		let historyRaw = await env.CHAT_KV.get(sessionId);
+		let historyRaw = await env.CHAT_KV.get(sessionId)
 		let history = historyRaw ? JSON.parse(historyRaw) : [];
 
-		history.push({
-			role: "user",
-			content: userMessage
-		});
 		history.push(
 			{ role: "user", content: userMessage },
 			{ role: "assistant", content: assistantMessage }
 		);
 
-		console.log("IN BACK-END: ", history)
+		console.log("IN BACK-END HISTORY: ", history)
 
 		await env.CHAT_KV.put(sessionId, JSON.stringify(history), {
 			expirationTtl: 86400,
