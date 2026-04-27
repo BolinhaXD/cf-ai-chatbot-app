@@ -251,7 +251,7 @@ function consumeSseEvents(buffer) {
 	return { events, buffer: normalized };
 }
 
-function loadHistory(){{
+async function loadHistory(){{
 	const res = await fetch("/api/history", {
 		method: "POST",
 		headers: {
